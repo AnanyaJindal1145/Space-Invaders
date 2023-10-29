@@ -144,3 +144,92 @@ function updateLaser($container){
     }
   }
 }
+// Enemy Laser
+function createEnemyLaser($container, x, y){
+  const $enemyLaser = document.createElement("img");
+  $enemyLaser.src = "img/enemyLaser.png";
+  $enemyLaser.className = "enemyLaser";
+  $container.appendChild($enemyLaser);
+  const enemyLaser = {x, y, $enemyLaser};
+  STATE.enemyLasers.push(enemyLaser);
+  setPosition($enemyLaser, x, y);
+}
+
+function updateEnemyLaser($container){
+  const enemyLasers = STATE.enemyLasers;
+  for(let i = 0; i < enemyLasers.length; i++){
+    const enemyLaser = enemyLasers[i];
+    enemyLaser.y += 2;
+    if (enemyLaser.y > GAME_HEIGHT-30){
+      deleteLaser(enemyLasers, enemyLaser, enemyLaser.$enemyLaser);
+    }
+    const enemyLaser_rectangle = enemyLaser.$enemyLaser.getBoundingClientRect();
+    const spaceship_rectangle = document.querySelector(".player").getBoundingClientRect();
+    if(collideRect(spaceship_rectangle, enemyLaser_rectangle)){
+      STATE.gameOver = true;
+    }
+    setPosition(enemyLaser.$enemyLaser, enemyLaser.x + STATE.enemy_width/2, enemyLaser.y+15);
+  }
+}
+
+// Delete Laser
+function deleteLaser(lasers, laser, $laser){
+  const index = lasers.indexOf(laser);
+  lasers.splice(index,1);
+  $container.removeChild($laser);
+}
+
+// Key Presses
+function KeyPress(event) {
+  if (event.keyCode === KEY_RIGHT) {
+    STATE.move_right = true;
+  } else if (event.keyCode === KEY_LEFT) {
+    STATE.move_left = true;
+  } else if (event.keyCode === KEY_SPACE) {
+    STATE.shoot = true;
+  }
+}
+
+function KeyRelease(event) {
+  if (event.keyCode === KEY_RIGHT) {
+    STATE.move_right = false;
+  } else if (event.keyCode === KEY_LEFT) {
+    STATE.move_left = false;
+  } else if (event.keyCode === KEY_SPACE) {
+    STATE.shoot = false;
+  }
+}
+
+// Main Update Function
+function update(){
+  updatePlayer();
+  updateEnemies($container);
+  updateLaser($container);
+  updateEnemyLaser($container);
+
+  window.requestAnimationFrame(update);
+  
+  if (STATE.gameOver) {
+    document.querySelector(".lose").style.display = "block";
+  } if (STATE.enemies.length == 0) {
+    document.querySelector(".win").style.display = "block";
+  }
+}
+
+function createEnemies($container) {
+  for(var i = 0; i <= STATE.number_of_enemies/2; i++){
+    createEnemy($container, i*80, 100);
+  } for(var i = 0; i <= STATE.number_of_enemies/2; i++){
+    createEnemy($container, i*80, 180);
+  }
+}
+
+// Initialize the Game
+const $container = document.querySelector(".main");
+createPlayer($container);
+createEnemies($container);
+
+// Key Press Event Listener
+window.addEventListener("keydown", KeyPress);
+window.addEventListener("keyup", KeyRelease);
+update();
